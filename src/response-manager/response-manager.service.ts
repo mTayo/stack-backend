@@ -4,9 +4,15 @@ import { Injectable } from '@nestjs/common';
 export class ResponseManagerService {
   createdResponse(data: any) {
     return {
-      status: 201,
+      statusCode: 201,
       message: 'Record created successfully',
       data,
+    };
+  }
+  forbiddenResponse(message: string) {
+    return {
+      statusCode: 403,
+      message,
     };
   }
 }
