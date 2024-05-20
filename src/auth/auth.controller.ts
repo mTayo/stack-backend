@@ -1,10 +1,20 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { AuthDto } from './dto';
 
 @Controller('auth')
 export class AuthController {
+  constructor(private authService: AuthService) {}
+
   @Post('signup')
-  signup() {
-    return { msg: 'I have signed up' };
+  signUp(@Body() dto: AuthDto) {
+    // console.log(dto);
+    return this.authService.signUp();
+  }
+
+  @Post('signin')
+  signIn() {
+    return { msg: 'I have signed in' };
   }
 }
