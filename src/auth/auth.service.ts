@@ -33,4 +33,31 @@ export class AuthService {
       throw error;
     }
   }
+
+  async signIn(dto: AuthDto) {
+    try {
+      const findUser = await this.prisma.user.findFirst({
+        where: {
+          email: dto.email,
+        },
+      });
+
+      if (!findUser) {
+        return this.response.forbiddenResponse('Invalid credentials');
+      }
+      const hashMatch = await argon.verify(findUser.hash, dto.password);
+      if (!hashMatch) {
+        return this.response.forbiddenResponse('Invalid credentials');
+      }
+      delete findUser.hash;
+      return this.response.retrieveRecordResponse(findUser);
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          return this.response.forbiddenResponse('Credentials taken');
+        }
+      }
+      throw error;
+    }
+  }
 }

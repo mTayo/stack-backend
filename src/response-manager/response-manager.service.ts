@@ -9,6 +9,13 @@ export class ResponseManagerService {
       data,
     };
   }
+  retrieveRecordResponse(data: any) {
+    return {
+      statusCode: 200,
+      message: 'Record retrieved successfully',
+      data,
+    };
+  }
   forbiddenResponse(message: string) {
     return {
       statusCode: 403,
