@@ -24,7 +24,7 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+[Stack] An event/Calendar management app built with NestJs and Swift.
 
 ## Installation
 
