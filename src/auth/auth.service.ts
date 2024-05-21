@@ -4,12 +4,14 @@ import { AuthDto } from './dto';
 import * as argon from 'argon2';
 import { ResponseManagerService } from 'src/response-manager/response-manager.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private response: ResponseManagerService,
+    private jwtService: JwtService,
   ) {}
 
   async signUp(dto: AuthDto) {
@@ -50,7 +52,11 @@ export class AuthService {
         return this.response.forbiddenResponse('Invalid credentials');
       }
       delete findUser.hash;
-      return this.response.retrieveRecordResponse(findUser);
+      const payload = {
+        ...findUser,
+        access_token: await this.jwtService.signAsync(findUser),
+      };
+      return this.response.retrieveRecordResponse(payload);
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {

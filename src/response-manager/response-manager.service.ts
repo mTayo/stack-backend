@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ResponseManagerService {
@@ -11,15 +11,12 @@ export class ResponseManagerService {
   }
   retrieveRecordResponse(data: any) {
     return {
-      statusCode: 200,
+      status: HttpStatus.OK,
       message: 'Record retrieved successfully',
       data,
     };
   }
   forbiddenResponse(message: string) {
-    return {
-      statusCode: 403,
-      message,
-    };
+    throw new HttpException(message, HttpStatus.FORBIDDEN);
   }
 }
