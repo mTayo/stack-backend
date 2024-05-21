@@ -27,8 +27,12 @@ export class EventTypesController {
 
   @HttpCode(200)
   @Patch(':id')
-  updateEventType(@Body() dto: EventsTypeDto, @Param('id') id: string) {
-    return this.eventTypesService.updateEventType(id, dto);
+  updateEventType(
+    @GetUser() user: User,
+    @Body() dto: EventsTypeDto,
+    @Param('id') id: string,
+  ) {
+    return this.eventTypesService.updateEventType(id, dto, user?.id);
   }
 
   @HttpCode(200)

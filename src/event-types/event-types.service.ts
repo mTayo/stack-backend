@@ -22,7 +22,6 @@ export class EventTypesService {
         const newEventType = await this.prisma.eventType.create({
           data: {
             title: dto.title,
-            // is_default: dto.is_default ? true : false,
             user_id: userId,
           },
         });
@@ -39,11 +38,12 @@ export class EventTypesService {
       throw error;
     }
   }
-  async updateEventType(id: string, dto: EventsTypeDto) {
+  async updateEventType(id: string, dto: EventsTypeDto, userId: string) {
     try {
       const findEventType = await this.prisma.eventType.findFirst({
         where: {
           id,
+          user_id: userId,
         },
       });
 
