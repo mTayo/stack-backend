@@ -19,4 +19,7 @@ export class ResponseManagerService {
   forbiddenResponse(message: string) {
     throw new HttpException(message, HttpStatus.FORBIDDEN);
   }
+  conflictResponse(message: string) {
+    throw new HttpException(message, HttpStatus.CONFLICT);
+  }
 }
