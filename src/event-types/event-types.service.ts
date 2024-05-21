@@ -10,7 +10,7 @@ export class EventTypesService {
     private prisma: PrismaService,
     private response: ResponseManagerService,
   ) {}
-  async createEventType(dto: EventsTypeDto) {
+  async createEventType(userId: string, dto: EventsTypeDto) {
     try {
       const findEventType = await this.prisma.eventType.findFirst({
         where: {
@@ -22,7 +22,8 @@ export class EventTypesService {
         const newEventType = await this.prisma.eventType.create({
           data: {
             title: dto.title,
-            is_default: dto.is_default,
+            // is_default: dto.is_default ? true : false,
+            user_id: userId,
           },
         });
         return this.response.createdResponse(newEventType);
@@ -35,6 +36,90 @@ export class EventTypesService {
           return this.response.conflictResponse('Record already exist');
         }
       }
+      throw error;
+    }
+  }
+  async updateEventType(id: string, dto: EventsTypeDto) {
+    try {
+      const findEventType = await this.prisma.eventType.findFirst({
+        where: {
+          id,
+        },
+      });
+
+      if (findEventType) {
+        const newEventType = await this.prisma.eventType.update({
+          where: {
+            id,
+          },
+          data: {
+            title: dto.title,
+          },
+        });
+        return this.response.updatedResponse(newEventType);
+      } else {
+        return this.response.notFoundResponse('Record not found');
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAllEventTypes(userId: string) {
+    try {
+      const findEventTypes = await this.prisma.eventType.findMany({
+        where: {
+          OR: [
+            {
+              user_id: {
+                equals: userId,
+              },
+            },
+            {
+              AND: {
+                is_default: {
+                  equals: true,
+                },
+              },
+            },
+          ],
+        },
+        select: {
+          id: true,
+          title: true,
+          is_default: true,
+        },
+      });
+      return this.response.retrieveRecordResponse(findEventTypes);
+    } catch (error) {
+      throw error;
+    }
+  }
+  async getEventType(userId: string | null, eventTypeId: string) {
+    try {
+      const findEventTypes = await this.prisma.eventType.findFirst({
+        where: {
+          OR: [
+            {
+              user_id: userId,
+              id: eventTypeId,
+            },
+            {
+              AND: {
+                id: eventTypeId,
+                is_default: true,
+              },
+            },
+          ],
+        },
+        select: {
+          id: true,
+          title: true,
+          is_default: true,
+        },
+      });
+      return this.response.retrieveRecordResponse(findEventTypes);
+    } catch (error) {
       throw error;
     }
   }

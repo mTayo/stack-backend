@@ -9,6 +9,13 @@ export class ResponseManagerService {
       data,
     };
   }
+  updatedResponse(data: any) {
+    return {
+      statusCode: 200,
+      message: 'Record updated successfully',
+      data,
+    };
+  }
   retrieveRecordResponse(data: any) {
     return {
       status: HttpStatus.OK,
@@ -18,6 +25,9 @@ export class ResponseManagerService {
   }
   forbiddenResponse(message: string) {
     throw new HttpException(message, HttpStatus.FORBIDDEN);
+  }
+  notFoundResponse(message: string) {
+    throw new HttpException(message, HttpStatus.NOT_FOUND);
   }
   conflictResponse(message: string) {
     throw new HttpException(message, HttpStatus.CONFLICT);
