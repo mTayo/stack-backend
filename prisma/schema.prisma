@@ -19,6 +19,15 @@ enum Operators {
   after
 }
 
+enum Frequency {
+  daily
+  weekly
+  monthly
+  yearly
+  custom
+  null
+}
+
 model User {
   id        String      @id @default(uuid())
   email     String      @unique
@@ -40,10 +49,11 @@ model Event {
   event_type    EventType      @relation(fields: [event_type_id], references: [id])
   event_type_id String
   event_listing EventListing[]
+  frequency     Frequency?
   is_active     Boolean?       @default(false)
   is_recurring  Boolean?       @default(false)
   start_date    DateTime
-  end_date      DateTime
+  end_date      DateTime?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   EventsMeta    EventsMeta[]
