@@ -4,6 +4,7 @@ import {
   ValidationOptions,
   ValidationArguments,
 } from 'class-validator';
+import { appConstanst } from 'src/constants';
 
 export function ValidateEventInterval(
   property: string,
@@ -22,22 +23,22 @@ export function ValidateEventInterval(
           if (!is_recurring) return true;
           let validationArray = [];
           switch (frequency) {
-            case 'custom':
+            case appConstanst.CUSTOM:
               validationArray = validateEventPayload(intervals);
               break;
-            case 'yearly':
+            case appConstanst.YEARLY:
               validationArray = validateEventPayload({
                 ...intervals,
                 frequency,
                 interval: 1,
               });
-            case 'monthly':
+            case appConstanst.MONTHLY:
               validationArray = validateEventPayload({
                 ...intervals,
                 frequency,
                 interval: 1,
               });
-            case 'weekly':
+            case appConstanst.WEEKLY:
               validationArray = validateEventPayload({
                 ...intervals,
                 frequency,
@@ -46,7 +47,9 @@ export function ValidateEventInterval(
             default:
               break;
           }
-          args.object['validation'] = validationArray;
+          if (validationArray.length)
+            args.object['validation'] = validationArray;
+
           return validationArray.length ? false : true;
         },
         defaultMessage(args: ValidationArguments) {
@@ -66,7 +69,7 @@ const validateEventPayload = (customIntervalObject: any) => {
   const { interval, months, days, frequency } = customIntervalObject;
 
   const validationArray = [];
-  if (frequency === 'weekly') {
+  if (frequency === appConstanst.WEEKLY) {
     if (isNaN(interval) || interval > 52) {
       validationArray.push('Invalid weekly interval');
     } else {
@@ -75,7 +78,7 @@ const validateEventPayload = (customIntervalObject: any) => {
     }
   }
 
-  if (frequency === 'monthly' || frequency === 'yearly') {
+  if (frequency === appConstanst.MONTHLY || frequency === appConstanst.YEARLY) {
     if (isNaN(interval) || interval > 12) {
       validationArray.push('Invalid monthly interval');
     } else {
@@ -91,18 +94,18 @@ const validateEventPayload = (customIntervalObject: any) => {
   return validationArray;
 };
 
-const validateDaysArray = (daysArray, frequency = 'monthly') => {
+const validateDaysArray = (daysArray, frequency = appConstanst.MONTHLY) => {
   if (Array.isArray(daysArray) && !daysArray.some(isNaN)) {
     for (let index = 0; index < daysArray.length; index++) {
       const element = daysArray[index];
       if (
-        (frequency === 'weekly' && element > 7) ||
-        (frequency === 'monthly' && element > 31)
+        (frequency === appConstanst.WEEKLY && element > 7) ||
+        (frequency === appConstanst.MONTHLY && element > 31)
       ) {
         return {
           error: true,
           msg:
-            frequency === 'weekly'
+            frequency === appConstanst.WEEKLY
               ? `${element} Invalid day selection: day selection not in the 7 days of the week`
               : `${element} Invalid day selection, day selection more than 31`,
         };

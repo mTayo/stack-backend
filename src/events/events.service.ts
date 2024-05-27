@@ -12,6 +12,6 @@ export class EventsService {
   ) {}
 
   createEvent(userId: string, data: EventsDto) {
-    console.log('here', userId, data, 'cold boy');
+    // console.log('here', userId, data, 'cold boy');
   }
 }
