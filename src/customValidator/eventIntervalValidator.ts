@@ -5,6 +5,7 @@ import {
   ValidationArguments,
 } from 'class-validator';
 import { appConstanst } from 'src/constants';
+import { isNotEmptyArray } from 'src/helpers';
 
 export function ValidateEventInterval(
   property: string,
@@ -95,7 +96,7 @@ const validateEventPayload = (customIntervalObject: any) => {
 };
 
 const validateDaysArray = (daysArray, frequency = appConstanst.MONTHLY) => {
-  if (Array.isArray(daysArray) && !daysArray.some(isNaN)) {
+  if (isNotEmptyArray(daysArray) && !daysArray.some(isNaN)) {
     for (let index = 0; index < daysArray.length; index++) {
       const element = daysArray[index];
       if (
@@ -121,7 +122,7 @@ const validateDaysArray = (daysArray, frequency = appConstanst.MONTHLY) => {
 };
 
 const validateMonthsArray = (monthsArray) => {
-  if (Array.isArray(monthsArray) && !monthsArray.some(isNaN)) {
+  if (isNotEmptyArray(monthsArray) && !monthsArray.some(isNaN)) {
     for (let index = 0; index < monthsArray.length; index++) {
       const element = monthsArray[index];
       if (element > 12) {
