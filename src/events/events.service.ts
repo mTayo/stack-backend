@@ -28,7 +28,6 @@ export class EventsService {
   createEvent = async (userId: string, data: EventsDto) => {
     try {
       this.data = data;
-      console.log(data);
       const eventMetaPayload = this.createEventsMeta();
       const newEvent = await this.prisma.event.create({
         data: {
@@ -52,7 +51,23 @@ export class EventsService {
         event_id: newEvent?.id,
         event_date: data?.start_date,
       });
-      return this.response.createdResponse(data);
+      return this.response.createdResponse(newEvent);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  getSingleEvent = async (eventId: string) => {
+    try {
+      const getSingleEvent = await this.prisma.event.findFirst({
+        where: {
+          id: eventId,
+        },
+        include: {
+          event_listing: true,
+        },
+      });
+      return this.response.retrieveRecordResponse(getSingleEvent);
     } catch (error) {
       throw error;
     }
