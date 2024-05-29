@@ -9,6 +9,7 @@ import {
   addDayToDate,
   addWeeksToDate,
   addMonthsToDate,
+  addYearsToDate,
 } from 'src/helpers';
 
 @Injectable()
@@ -37,66 +38,84 @@ export class EventsService {
     const datum = this.data;
     const { intervals }: any = datum;
     const date = new Date(datum.start_date);
-    const event_meta = [];
+    let event_meta: any = [];
     switch (intervals.frequency) {
       case appConstanst.WEEKLY:
-        // case appConstanst.MONTHLY:
-        for (let index = 0; index < intervals.days.length; index++) {
-          const element = intervals.days[index];
-          let date2 = addWeeksToDate(
-            new Date(datum.start_date),
-            intervals.interval,
-          );
-          date2 = addDayToDate(new Date(date2), element);
-          const difference = differenceBtwDates(date, new Date(date2));
-          event_meta.push({
-            schedule_interval: difference,
-            last_schedule_date: date,
-            next_schedule_date: addDayToDate(date, element),
-          });
-        }
-
+        event_meta = this.computeWeeklyEvents(
+          date,
+          intervals.interval,
+          intervals.days,
+        );
         break;
       case appConstanst.MONTHLY:
-        for (let index = 0; index < intervals.days.length; index++) {
-          const element = intervals.days[index];
-          let date2 = addMonthsToDate(
-            new Date(datum.start_date),
-            intervals.interval,
-          );
-          date2 = addDayToDate(new Date(date2), element);
-          const difference = differenceBtwDates(date, new Date(date2));
-          event_meta.push({
-            schedule_interval: difference,
-            last_schedule_date: date,
-            next_schedule_date: addDayToDate(date, element),
-          });
-        }
+        event_meta = this.computeWeeklyEvents(
+          date,
+          intervals.interval,
+          intervals.days,
+        );
         break;
       case appConstanst.YEARLY:
-        const date2 = new Date(datum.start_date);
-        date2.setFullYear(date.getFullYear() + intervals.interval);
+        const getYear = addYearsToDate(
+          new Date(datum.start_date),
+          intervals.interval,
+        );
         for (let index = 0; index < intervals.months.length; index++) {
           const element = intervals.months[index];
-          date2.setMonth(element);
+          let date2 = addMonthsToDate(new Date(getYear), element);
           for (let j = 0; j < intervals.days.length; j++) {
             const el = intervals.days[j];
-            date2.setDate(date2.getDate() + el);
-            console.log(date2);
+            date2 = addDayToDate(new Date(date2), el);
+            const difference = differenceBtwDates(date, new Date(date2));
+            event_meta.push({
+              schedule_interval: difference,
+              last_schedule_date: date,
+              next_schedule_date: addDayToDate(date, element),
+            });
           }
-
-          // const date2 = new Date(datum.start_date);
-          // date2.setDate(date2.getDate() + element);
-          // const difference = differenceBtwDates(date, date2);
-          // event_meta.push({
-          //   schedule_interval: difference,
-          //   last_schedule_date: date,
-          //   next_schedule_date: getNextScheduleDate(date, element),
-          // });
         }
         break;
       default:
         break;
     }
   }
+
+  computeWeeklyEvents = (
+    startDate: Date,
+    interval: number,
+    selectedDays: Array<number>,
+  ) => {
+    const returnArr = [];
+    for (let index = 0; index < selectedDays.length; index++) {
+      const element = selectedDays[index];
+      let date2 = addWeeksToDate(new Date(startDate), interval);
+      date2 = addDayToDate(new Date(date2), element);
+      const difference = differenceBtwDates(startDate, new Date(date2));
+      returnArr.push({
+        schedule_interval: difference,
+        last_schedule_date: null,
+        next_schedule_date: addDayToDate(startDate, element),
+      });
+    }
+    return returnArr;
+  };
+  computeMonthlyEvents = (
+    startDate: Date,
+    interval: number,
+    selectedDays: Array<number>,
+  ) => {
+    const returnArr = [];
+    for (let index = 0; index < selectedDays.length; index++) {
+      const element = selectedDays[index];
+      let date2 = addMonthsToDate(new Date(startDate), interval);
+      date2 = addDayToDate(new Date(date2), element);
+      const difference = differenceBtwDates(startDate, new Date(date2));
+      returnArr.push({
+        schedule_interval: difference,
+        last_schedule_date: null,
+        next_schedule_date: addDayToDate(startDate, element),
+      });
+    }
+    return returnArr;
+  };
+  computeYearlyEvents = () => {};
 }
