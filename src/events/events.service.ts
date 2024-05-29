@@ -13,6 +13,7 @@ import {
 } from 'src/helpers';
 import { Frequency, Operators } from '@prisma/client';
 import { EventsMetaService } from 'src/events-meta/events-meta.service';
+import { EventsListingService } from 'src/events-listing/events-listing.service';
 
 @Injectable()
 export class EventsService {
@@ -21,32 +22,39 @@ export class EventsService {
     private prisma: PrismaService,
     private response: ResponseManagerService,
     private eventsMetaService: EventsMetaService,
+    private eventsListingService: EventsListingService,
   ) {}
 
   createEvent = async (userId: string, data: EventsDto) => {
     try {
       this.data = data;
+      console.log(data);
       const eventMetaPayload = this.createEventsMeta();
       const newEvent = await this.prisma.event.create({
         data: {
           title: data.title,
           note: data?.note,
-          operator: Operators[data?.operator] || null,
+          operator: Operators[data?.operator],
           event_type_id: data?.event_type_id,
           is_active: true,
           is_recurring: data.is_recurring,
           start_date: data?.start_date,
           end_date: data?.end_date,
-          frequency: Frequency[data?.frequency] || null,
+          frequency: Frequency[data?.frequency],
           user_id: userId,
         },
       });
       eventMetaPayload.forEach(function (element) {
         element.event_id = newEvent?.id;
       });
-      this.eventsMetaService.batchInsertEventsMeta(eventMetaPayload);
+      await this.eventsMetaService.batchInsertEventsMeta(eventMetaPayload);
+      await this.eventsListingService.createEventListing({
+        event_id: newEvent?.id,
+        event_date: data?.start_date,
+      });
+      return this.response.createdResponse(data);
     } catch (error) {
-      console.log(error);
+      throw error;
     }
   };
 
@@ -140,7 +148,7 @@ export class EventsService {
     const difference = differenceBtwDates(startDate, new Date(nextDate));
     returnArr.push({
       schedule_interval: difference,
-      last_schedule_date: null,
+      last_schedule_date: startDate,
       next_schedule_date: nextDate,
     });
 
@@ -178,7 +186,7 @@ export class EventsService {
       const difference = differenceBtwDates(startDate, new Date(date2));
       returnArr.push({
         schedule_interval: difference,
-        last_schedule_date: null,
+        last_schedule_date: startDate,
         next_schedule_date: addDayToDate(startDate, element),
       });
     }
@@ -201,7 +209,7 @@ export class EventsService {
         const difference = differenceBtwDates(startDate, new Date(date2));
         returnArr.push({
           schedule_interval: difference,
-          last_schedule_date: null,
+          last_schedule_date: startDate,
           next_schedule_date: addDayToDate(startDate, element),
         });
       }
