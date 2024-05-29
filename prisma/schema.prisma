@@ -49,7 +49,7 @@ model Event {
   event_type    EventType      @relation(fields: [event_type_id], references: [id])
   event_type_id String
   event_listing EventListing[]
-  frequency     Frequency?
+  frequency     Frequency      @default(null)
   is_active     Boolean?       @default(false)
   is_recurring  Boolean?       @default(false)
   start_date    DateTime
@@ -71,12 +71,13 @@ model EventType {
 }
 
 model EventListing {
-  id        String   @id @default(uuid())
-  event     Event?   @relation(fields: [event_id], references: [id])
-  event_id  String
-  note      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  event      Event?   @relation(fields: [event_id], references: [id])
+  event_id   String
+  note       String?
+  event_date DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model EventsMeta {

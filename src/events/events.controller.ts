@@ -1,6 +1,6 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { EventsDto } from './dto';
-import { Event } from '@prisma/client';
+import { User } from '@prisma/client';
 import { GetUser } from 'src/auth/decorator';
 import { EventsService } from './events.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -10,7 +10,7 @@ import { AuthGuard } from '@nestjs/passport';
 export class EventsController {
   constructor(private eventService: EventsService) {}
   @Post()
-  createEvent(@GetUser() user: Event, @Body() dto: EventsDto) {
+  createEvent(@GetUser() user: User, @Body() dto: EventsDto) {
     return this.eventService.createEvent(user?.id, dto);
   }
 }

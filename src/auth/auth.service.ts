@@ -51,8 +51,6 @@ export class AuthService {
       if (!hashMatch) {
         return this.response.forbiddenResponse('Invalid credentials');
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      //   const { hash, ...rest } = findUser;
       delete findUser.hash;
       const payload = {
         ...findUser,

@@ -11,6 +11,8 @@ import {
   addMonthsToDate,
   addYearsToDate,
 } from 'src/helpers';
+import { Frequency, Operators } from '@prisma/client';
+import { EventsMetaService } from 'src/events-meta/events-meta.service';
 
 @Injectable()
 export class EventsService {
@@ -18,23 +20,86 @@ export class EventsService {
   constructor(
     private prisma: PrismaService,
     private response: ResponseManagerService,
+    private eventsMetaService: EventsMetaService,
   ) {}
 
-  createEvent(userId: string, data: EventsDto) {
-    const { frequency } = data;
-    this.data = data;
-    const payload = [];
+  createEvent = async (userId: string, data: EventsDto) => {
+    try {
+      this.data = data;
+      const eventMetaPayload = this.createEventsMeta();
+      const newEvent = await this.prisma.event.create({
+        data: {
+          title: data.title,
+          note: data?.note,
+          operator: Operators[data?.operator] || null,
+          event_type_id: data?.event_type_id,
+          is_active: true,
+          is_recurring: data.is_recurring,
+          start_date: data?.start_date,
+          end_date: data?.end_date,
+          frequency: Frequency[data?.frequency] || null,
+          user_id: userId,
+        },
+      });
+      eventMetaPayload.forEach(function (element) {
+        element.event_id = newEvent?.id;
+      });
+      this.eventsMetaService.batchInsertEventsMeta(eventMetaPayload);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  createEventsMeta = () => {
+    let eventsMetaPayload: any = [];
+    const { frequency } = this.data;
     switch (frequency) {
       case appConstanst.CUSTOM:
-        this.handleCustomEvents();
+        eventsMetaPayload = this.handleCustomEvents();
         break;
-
+      case appConstanst.DAILY:
+        eventsMetaPayload = this.handleDailyEvents();
+      case appConstanst.WEEKLY:
+        eventsMetaPayload = this.handleWeeklyEvents();
+      case appConstanst.MONTHLY:
+        eventsMetaPayload = this.handleMonthlyEvents();
+      case appConstanst.YEARLY:
+        eventsMetaPayload = this.handleYearlyEvents();
       default:
         break;
     }
-  }
+    return eventsMetaPayload;
+  };
 
-  handleCustomEvents() {
+  handleDailyEvents = () => {
+    const datum = this.data;
+    return this.computeDailyEvents(datum.start_date, 1);
+  };
+
+  handleWeeklyEvents = () => {
+    const datum = this.data;
+    const { intervals }: any = datum;
+    return this.computeWeeklyEvents(datum.start_date, 1, intervals.days);
+  };
+
+  handleMonthlyEvents = () => {
+    const datum = this.data;
+    const { intervals }: any = datum;
+    return this.computeMonthlyEvents(datum.start_date, 1, intervals.days);
+  };
+
+  handleYearlyEvents = () => {
+    const datum = this.data;
+    const { intervals }: any = datum;
+    return this.computeYearlyEvents(
+      datum.start_date,
+      1,
+      intervals.months,
+      intervals.days,
+    );
+  };
+
+  handleCustomEvents = () => {
     const datum = this.data;
     const { intervals }: any = datum;
     const date = new Date(datum.start_date);
@@ -48,37 +113,39 @@ export class EventsService {
         );
         break;
       case appConstanst.MONTHLY:
-        event_meta = this.computeWeeklyEvents(
+        event_meta = this.computeMonthlyEvents(
           date,
           intervals.interval,
           intervals.days,
         );
         break;
       case appConstanst.YEARLY:
-        const getYear = addYearsToDate(
-          new Date(datum.start_date),
+        event_meta = this.computeYearlyEvents(
+          date,
           intervals.interval,
+          intervals.months,
+          intervals.days,
         );
-        for (let index = 0; index < intervals.months.length; index++) {
-          const element = intervals.months[index];
-          let date2 = addMonthsToDate(new Date(getYear), element);
-          for (let j = 0; j < intervals.days.length; j++) {
-            const el = intervals.days[j];
-            date2 = addDayToDate(new Date(date2), el);
-            const difference = differenceBtwDates(date, new Date(date2));
-            event_meta.push({
-              schedule_interval: difference,
-              last_schedule_date: date,
-              next_schedule_date: addDayToDate(date, element),
-            });
-          }
-        }
         break;
       default:
+        event_meta = [];
         break;
     }
-  }
+    return event_meta;
+  };
 
+  computeDailyEvents = (startDate: Date, interval: number) => {
+    const returnArr = [];
+    const nextDate = addDayToDate(new Date(startDate), 1);
+    const difference = differenceBtwDates(startDate, new Date(nextDate));
+    returnArr.push({
+      schedule_interval: difference,
+      last_schedule_date: null,
+      next_schedule_date: nextDate,
+    });
+
+    return returnArr;
+  };
   computeWeeklyEvents = (
     startDate: Date,
     interval: number,
@@ -117,5 +184,28 @@ export class EventsService {
     }
     return returnArr;
   };
-  computeYearlyEvents = () => {};
+  computeYearlyEvents = (
+    startDate: Date,
+    interval: number,
+    selectedMonths: Array<number>,
+    selectedDays: Array<number>,
+  ) => {
+    const returnArr = [];
+    const getYear = addYearsToDate(new Date(startDate), interval);
+    for (let index = 0; index < selectedMonths.length; index++) {
+      const element = selectedMonths[index];
+      let date2 = addMonthsToDate(new Date(getYear), element);
+      for (let j = 0; j < selectedDays.length; j++) {
+        const el = selectedDays[j];
+        date2 = addDayToDate(new Date(date2), el);
+        const difference = differenceBtwDates(startDate, new Date(date2));
+        returnArr.push({
+          schedule_interval: difference,
+          last_schedule_date: null,
+          next_schedule_date: addDayToDate(startDate, element),
+        });
+      }
+    }
+    return returnArr;
+  };
 }
