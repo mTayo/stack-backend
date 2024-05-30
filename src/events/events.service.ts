@@ -14,6 +14,8 @@ import {
 import { Frequency, Operators } from '@prisma/client';
 import { EventsMetaService } from 'src/events-meta/events-meta.service';
 import { EventsListingService } from 'src/events-listing/events-listing.service';
+import { EventsListingDto } from 'src/events-listing/dto';
+import { EventsMetaDto } from 'src/events-meta/dto';
 
 @Injectable()
 export class EventsService {
@@ -43,7 +45,7 @@ export class EventsService {
           user_id: userId,
         },
       });
-      eventMetaPayload.forEach(function (element) {
+      eventMetaPayload.forEach(function (element: EventsMetaDto) {
         element.event_id = newEvent?.id;
       });
       await this.eventsMetaService.batchInsertEventsMeta(eventMetaPayload);
